@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>发送微信消息</title>
+
+<meta name="keywords" content="keyword1,keyword2,keyword3">
+<meta name="description" content="this is my page">
+<meta name="content-type" content="text/html; charset=UTF-8">
+
+
+
+<!--<link rel="stylesheet" type="text/css" href="./styles.css">-->
+<script src="js/jquery-1.11.2.min.js"></script>
+<!-- <script src="js/jquery.min.js"></script> -->
+<script src="js/global.js"></script>
+<script src="js/jquery-2.2.0.min.js"></script>
+<script src="js/jquery.min.js"></script>
+<script src="js/mustache.min.js"></script>
+</head>
+
+<body>
+
+
+	<input type="text" id="allMessage">
+	<button onclick="sendAll()">群发消息</button>
+	<table>
+		<tr>
+			<td>openId</td>
+			<!-- <td>name</td> -->
+			<td>message</td>
+			<td>send</td>
+			<td>查询当前所在分组</td>
+		</tr>
+		<tbody id="rowList">
+			<script id="rowTemplate" type="x-tmpl-mustache">
+	{{#rows}}
+  	<tr>
+  		<td>{{openId}}</td>
+        <td><input type="text" id="{{openId}}message"/></td>
+		<td><botton onclick="send('{{openId}}')">send</button></td>
+		<td><botton onclick="queryGroup('{{openId}}')">查询分组</button></td>
+  	</tr>
+	{{/rows}}
+
+
+	</script>
+		</tbody>
+	</table>
+
+
+
+	<button onclick="getMessage()">getMessage</button>
+	<br />
+
+	<br />
+	<input type="text" id="groupName">
+	<button onclick="addGroup()">创建分组</button>
+	<br />
+	<button onclick="getGroup()">获取分组</button>
+
+
+	<table>
+
+		<tr>
+			<td>分组id</td>
+			<td>分组name</td>
+			<td>分组人数</td>
+			<td>修改分组名</td>
+			<td>修改</td>
+
+		</tr>
+
+
+		<tbody id="groupList">
+			<script id="groupTemplate" type="x-tmpl-mustache">
+	{{#rows}}
+  	<tr>
+  		<td>{{id}}</td>
+		<td>{{name}}</td>
+        <td>{{count}}</td>
+		<td><input type="text" id="{{id}}name"/></td>
+		<td><botton onclick="updateGroupName('{{id}}')">修改分组名</button></td>
+		<td><botton onclick="deleteGroup('{{id}}')">删除分组</button></td>
+		
+  	</tr>
+	{{/rows}}
+	</script>
+		</tbody>
+
+	</table>
+
+
+
+	<script type="text/javascript">
+		/* 获取所有粉丝信息 */
+		var geturl = "weixinC/getUsers";
+		$.ajax({
+			url : geturl,
+			//data : JSON.stringify(message),
+			dataType : 'json',
+			cache : false,
+			type : 'POST',
+			contentType : "application/json",
+			context : this,
+			success : function(data) {
+				if (data.success) {
+					showRow(data);
+				}
+			}
+		});
+		/*显示所有人信息	*/
+		function showRow(data) {
+			var junyiTemplate = $("#rowTemplate").html();
+			Mustache.parse(junyiTemplate);
+			var junyiStyle = Mustache.render(junyiTemplate, data);
+			$(junyiStyle).each(function(index, rows) {
+				$(rows).appendTo("#rowList");
+			});
+		}
+		/* 发送单人信息 */
+		function send(openId) {
+			var id1 = "#" + openId + "message";
+			message = $(id1).val();
+			if (verifyIsNull(message)) {
+				alert("填写信息");
+				return;
+			}
+
+			var messageModel = {};
+			messageModel.message = message;
+			messageModel.openId = openId;
+			$.ajax({
+				url : "weixinC/send",
+				data : JSON.stringify(messageModel),
+				dataType : 'json',
+				cache : false,
+				type : 'POST',
+				contentType : "application/json",
+				context : this,
+				success : function(data) {
+					alert("发送成功");
+				}
+			});
+		}
+		/* 发送所有信息 */
+		function sendAll() {
+			var id1 = allMessage;
+			message = $(id1).val();
+			if (verifyIsNull(message)) {
+				alert("填写信息");
+				return;
+			}
+
+			var messageModel = {};
+			messageModel.message = message;
+			$.ajax({
+				url : "weixinC/sendAll",
+				data : JSON.stringify(messageModel),
+				dataType : 'json',
+				cache : false,
+				type : 'POST',
+				contentType : "application/json",
+				context : this,
+				success : function(data) {
+					alert("发送成功");
+				}
+			});
+		}
+
+		/* 	function getMessage() {
+				console.log("getMessage");
+
+				$.ajax({
+					url : "weixinC/getMessage",
+					type : 'POST',
+					context : this,
+					success : function(data) {
+
+					}
+				});
+			} */
+
+		/* 获取分组信息 */
+		function getGroup() {
+			$.ajax({
+				url : "weixinC/getGroup",
+				//data : JSON.stringify(message),
+				type : 'POST',
+				success : function(data) {
+					console.log("获取分组成功");
+					console.log(data.success);
+					showGroup(data);
+
+				}
+			});
+		}
+		/* 查询某人所在分组 */
+		function queryGroup(openId) {
+			var messageModel = {};
+			messageModel.openId = openId;
+
+			$.ajax({
+				url : "weixinC/queryGroup",
+				data : JSON.stringify(messageModel),
+				dataType : 'json',
+				cache : false,
+				type : 'POST',
+				contentType : "application/json",
+				context : this,
+				success : function(data) {
+					console.log("查询分组成功");
+					console.log("groupid是：" + data.message);
+				}
+			});
+		}
+
+		function showGroup(data) {
+			var junyiTemplate = $("#groupTemplate").html();
+			Mustache.parse(junyiTemplate);
+			var junyiStyle = Mustache.render(junyiTemplate, data);
+			$(junyiStyle).each(function(index, rows) {
+				$(rows).appendTo("#groupList");
+			});
+		}
+
+		/* 修改分组名 */
+		function updateGroupName(id) {
+			var id1 = "#" + id + "name";
+			message = $(id1).val();
+			if (verifyIsNull(message)) {
+				alert("填写信息");
+				return;
+			}
+
+			var messageModel = {};
+			messageModel.name = message;
+			messageModel.id = id;
+			$.ajax({
+				url : "weixinC/updateGroupName",
+				data : JSON.stringify(messageModel),
+				dataType : 'json',
+				cache : false,
+				type : 'POST',
+				contentType : "application/json",
+				context : this,
+				success : function(data) {
+					alert("更新成功成功");
+					window.location.reload();
+
+				}
+			});
+		}
+		
+		/* 删除分组 */
+		function deleteGroup(id) {
+
+			var messageModel = {};
+			messageModel.id = id;
+			$.ajax({
+				url : "weixinC/deleteGroup",
+				data : JSON.stringify(messageModel),
+				dataType : 'json',
+				cache : false,
+				type : 'POST',
+				contentType : "application/json",
+				context : this,
+				success : function(data) {
+					alert("删除分组成功");
+					window.location.reload();
+
+				}
+			});
+		}
+
+		/* 创建分组 */
+		function addGroup() {
+			var id1 = groupName;
+			message = $(id1).val();
+			if (verifyIsNull(message)) {
+				alert("填写信息");
+				return;
+			}
+
+			var messageModel = {};
+			messageModel.name = message;
+			$.ajax({
+				url : "weixinC/addGroup",
+				data : JSON.stringify(messageModel),
+				dataType : 'json',
+				cache : false,
+				type : 'POST',
+				contentType : "application/json",
+				context : this,
+				success : function(data) {
+					alert("发送成功");
+				}
+			});
+		}
+	</script>
+</body>
+</html>

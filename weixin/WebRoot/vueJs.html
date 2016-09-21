@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>vueJs.html</title>
+
+<meta name="keywords" content="keyword1,keyword2,keyword3">
+<meta name="description" content="this is my page">
+<meta name="content-type" content="text/html; charset=UTF-8">
+<script src="js/jquery-2.2.0.min.js"></script>
+<script src="js/vue.js"></script>
+<!--<link rel="stylesheet" type="text/css" href="./styles.css">-->
+
+</head>
+
+<body>
+	<div id="test">
+		<form>
+			姓名：<input v-model="student.name" /> <br /> 年龄：<input
+				v-model="student.age" /> <br />
+		</form>
+		<button v-on:click="test(student)">测试</button>
+		<br> name:<span>{{student.name}}</span><br> 
+		age:<span>{{student.age}}</span><br>
+		success:<span>{{parent.success}}</span><br>
+		test:<span>{{isTest}}</span><br>
+		age2:<button v-bind:href="student.name">baidu</button>
+	</div>
+
+
+</body>
+<script>
+	
+	Vue.config.debug = true;//开启vue的debug模式
+	var vm = new Vue({
+		el:"#test",
+		data : {
+			student : {},
+			parent:{},
+			isTest:'测试'
+			
+			
+		},
+		methods : {
+			test : function(student) {
+				console.log("点击了测试");
+				 $.ajax({
+					type : "post",
+					url : "testC/test",
+					data : JSON.stringify(student),
+					datatype : 'json',
+					contentType:"application/json",
+					success : function(data) {
+						
+						vm.parent = data;
+						vm.isTest = data.success;
+						//console.log(vm.parent.success);
+						//console.log(vm.isTest);
+					},
+					error : function() {
+						alert("请求失败");
+					}
+				})  
+			}
+		}
+	});
+</script>
+
+
+</html>
